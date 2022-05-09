@@ -64,7 +64,7 @@ def calc_min_prefix_discrepancy(incidence):
     n = incidence.shape[1]
     max_disc = 0
     for i in range(n):
-        opt_coloring, disc, count = find_opt_coloring(incidence[0:i+1])
+        opt_coloring, disc, count = find_opt_coloring(incidence[:,0:i+1])
         if disc > max_disc:
             max_disc = disc
     return max_disc
@@ -76,7 +76,7 @@ def calc_score_function(incidence):
     max_disc = 0
     count_final = 0
     for i in range(n):
-        opt_coloring, disc, count = find_opt_coloring(incidence[0:i+1])
+        opt_coloring, disc, count = find_opt_coloring(incidence[:,0:i+1])
         if disc > max_disc:
             max_disc = disc
             count_final = count
