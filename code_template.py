@@ -82,12 +82,9 @@ def calc_score(state):
 	"""
 	first_construction = state[0:DECISIONS]
 	incidence = np.reshape(first_construction, (M, N))
-	# min_disc = calc_score_function(N, incidence)
-	opt_coloring, min_disc, count = find_opt_coloring(incidence)
-	# min_disc = min_disc - 0.00001*count
-	min_disc = min_disc - 0.001*symmetry(incidence)
+	disc = calc_min_prefix_discrepancy(incidence)
 
-	return min_disc
+	return disc
 
 ####No need to change anything below here. 
 
