@@ -11,6 +11,7 @@
 #Use this file as a template if you are able to use numba njit() for the calc_score function in your problem.
 #Otherwise, if this is not an option, modify the simpler code in the *demos* folder
 
+from dis import dis
 import networkx as nx #for various graph parameters, such as eigenvalues, macthing number, etc. Does not work with numba (yet)
 import random
 import numpy as np
@@ -20,18 +21,18 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.models import load_model
 from statistics import mean
+from hypergraph_njit import *
 import pickle
 import time
-import math
 import matplotlib.pyplot as plt
 from numba import njit
 
 
-N = 20   #number of vertices in the graph. Only used in the reward function, not directly relevant to the algorithm 
-DECISIONS = int(N*(N-1)/2)  #The length of the word we are generating. If we are generating a graph, we create a 0-1 word of length (N choose 2)
-
+N = 7 # number of elements
+M = 7 # number of sets
+DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
-n_sessions =1000 #number of new sessions per iteration
+n_sessions = 1000 #number of new sessions per iteration
 percentile = 93 #top 100-X percentile we are learning from
 super_percentile = 94 #top 100-X percentile that survives to next iteration
 
@@ -49,11 +50,10 @@ observation_space = 2*DECISIONS #Leave this at 2*DECISIONS. The input vector wil
 
 
 						  
-len_game = DECISIONS 
+len_game = DECISIONS
 state_dim = (observation_space,)
 
 INF = 1000000
-
 
 #Model structure: a sequential network with three hidden layers, sigmoid activation in the output.
 #I usually used relu activation in the hidden layers but play around to see what activation function and what optimizer works best.
@@ -65,11 +65,10 @@ model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 model.add(Dense(1, activation="sigmoid"))
 model.build((None, observation_space))
-model.compile(loss="binary_crossentropy", optimizer=SGD(learning_rate = LEARNING_RATE)) #Adam optimizer also works well, with lower learning rate
+#model.compile(loss="binary_crossentropy", optimizer=SGD(learning_rate = LEARNING_RATE)) #Adam optimizer also works well, with lower learning rate
+model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = 0.0003)) #Adam optimizer also works well, with lower learning rate
 
 print(model.summary())
-
-
 
 
 
@@ -81,26 +80,21 @@ def calc_score(state):
 
     Output: the reward/score for your construction. See files in the *demos* folder for examples.	
 	"""
+	first_construction = state[0:DECISIONS]
+	incidence = np.reshape(first_construction, (M, N))
+	# min_disc = calc_score_function(N, incidence)
+	opt_coloring, min_disc, count = find_opt_coloring(incidence)
+	# min_disc = min_disc - 0.00001*count
+	min_disc = min_disc - 0.001*symmetry(incidence)
 
-
-    #
-    #
-    #
-    # -----Your code goes here-----
-    #
-    #
-    #
-	
-
-	return reward
-
+	return min_disc
 
 ####No need to change anything below here. 
 
 jitted_calc_score = njit()(calc_score)
 
 
-def play_game(n_sessions, actions,state_next,states,prob, step, total_score):
+def play_game(n_sessions, actions, state_next, states, prob, step, total_score):
 	
 	for i in range(n_sessions):
 		
