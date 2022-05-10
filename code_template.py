@@ -82,7 +82,7 @@ def calc_score(state):
 	"""
 	first_construction = state[0:DECISIONS]
 	incidence = np.reshape(first_construction, (M, N))
-	disc = calc_min_prefix_discrepancy(incidence)
+	disc = calc_prefix_disc_simple(incidence)
 
 	return disc
 
