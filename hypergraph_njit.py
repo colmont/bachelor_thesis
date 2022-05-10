@@ -2,8 +2,17 @@
 import numpy as np
 from numba import njit
 
-@njit
+@njit()
 def dot(A,b):
+    """
+    Simple matrix-vector dot product function.
+
+    :param A: input matrix
+    :type A: numpy.ndarray
+    :param b: input vector
+    :type b: numpy.ndarray
+    :return: vector obtained from dot product
+    """
     n, m = A.shape
     c = np.zeros(n) #np.float64
     for i in range(n):
@@ -11,13 +20,29 @@ def dot(A,b):
             c[i] += A[i][j] * b[j]
     return c
 
+# 
 @njit()
-def calc_discrepancy(incidence, coloring):
+def calc_disc(incidence, coloring):
+    """
+    Given an incidence matrix and specific coloring, compute the discrepancy.
+
+    :param incidence: incidence matrix (only 0's and 1's)
+    :type incidence: numpy.ndarray
+    :param coloring: coloring (only 1's and -1's)
+    :type coloring: numpy.ndarray
+    :return: discrepancy (int) of the incidence matrix, for this specific coloring
+    """
     return np.max(np.absolute(dot(incidence,coloring)))
 
 @njit(cache=True)
 def cartesian_jit(N):
+    """
+    Function to compute all colorings of size N.
 
+    :param N: length of colorings vectors
+    :type N: int
+    :return: matrix, with each row being a possible coloring (of size N)
+    """
     arrays = [np.asarray([-1.0,1.0]) for i in range(N)]
     n = 1
     for x in arrays:
@@ -39,14 +64,22 @@ def cartesian_jit(N):
 
 @njit()
 def find_opt_coloring(incidence):
-    """Brute force search"""
+    """
+    Function to find the optimal coloring and associated (minimal) discrepancy
+    for a particular incidence matrix.
+
+    :param incidence: incidence matrix (only 0's and 1's)
+    :type incidence: np.ndarray
+    :return: optimal coloring (np.ndarray), associated discrepancy (int)
+    and amount of colorings that lead to the associated (minimal) discrepancy
+    """
     n = incidence.shape[1]
     min_disc = n
     opt_coloring = np.ones(n) #FIXME: dtype=int
     count = 0
     for c in cartesian_jit(n):
         if c[0] == 1: # fix first element of coloring
-            disc = calc_discrepancy(incidence, c)
+            disc = calc_disc(incidence, c)
             if disc < min_disc:
                 min_disc = disc
                 opt_coloring = c
@@ -55,31 +88,41 @@ def find_opt_coloring(incidence):
                 count +=1
     return np.asarray(opt_coloring), min_disc, count
 
-@njit
-def calc_min_prefix_discrepancy(incidence):
-    n = incidence.shape[1]
-    max_disc = 0
-    for i in range(n):
-        opt_coloring, disc, count = find_opt_coloring(incidence[:,0:i+1])
-        if disc > max_disc:
-            max_disc = disc
-    return max_disc
+@njit()
+def calc_prefix_disc_simple(incidence):
+    """
+    Function to compute the (minimal) prefix discrepancy
+    for a particular incidence matrix.
 
-@njit
-def calc_score_function(incidence):
+    :param incidence: incidence matrix (only 0's and 1's)
+    :type incidence: np.ndarray
+    :return: (minimal) prefix discrepancy
+    """
     n = incidence.shape[1]
-    max_disc = 0
-    count_final = 0
-    for i in range(n):
-        opt_coloring, disc, count = find_opt_coloring(incidence[:,0:i+1])
-        if disc > max_disc:
-            max_disc = disc
-            count_final = count
-    return max_disc - 0.00001*count_final
+    min_disc = n
+    opt_coloring = np.ones(n) #FIXME: dtype=int
+    for c in cartesian_jit(n):
+        if c[0] == 1: # fix first element of coloring
+            prefix_UB = 0
+            for i in range(n):
+                disc = calc_disc(incidence[:,0:i+1], c)
+                if disc > prefix_UB:
+                    prefix_UB = disc
+            if prefix_UB < min_disc:
+                min_disc = prefix_UB
+                opt_coloring = c
+    return min_disc #, np.asarray(opt_coloring),
 
-@njit
+@njit()
 def symmetry(incidence):
-    max = 0
+    """
+    Function that computes the amount of "symmetry" of given
+    incidence matrix.
+
+    :param incidence: incidence matrix (only 0's and 1's)
+    :type incidence: np.ndarray
+    :return: "symmetry" (int) = var of row_count + var of col_count
+    """
     m, n = incidence.shape
     row_count = np.zeros(m)
     col_count = np.zeros(n)
