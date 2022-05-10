@@ -1,6 +1,4 @@
-# Source: https://github.com/privet-kitty/hypergraph-discrepancy
-
-from itertools import count
+# Partial source: https://github.com/privet-kitty/hypergraph-discrepancy
 import numpy as np
 from numba import njit
 
@@ -25,7 +23,6 @@ def cartesian_jit(N):
     for x in arrays:
         n *= x.size
     out = np.zeros((n, len(arrays)))
-
 
     for i in range(len(arrays)):
         m = int(n / arrays[i].size)
@@ -58,7 +55,6 @@ def find_opt_coloring(incidence):
                 count +=1
     return np.asarray(opt_coloring), min_disc, count
 
-
 @njit
 def calc_min_prefix_discrepancy(incidence):
     n = incidence.shape[1]
@@ -68,7 +64,6 @@ def calc_min_prefix_discrepancy(incidence):
         if disc > max_disc:
             max_disc = disc
     return max_disc
-
 
 @njit
 def calc_score_function(incidence):
