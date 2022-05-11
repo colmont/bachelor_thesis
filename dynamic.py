@@ -31,44 +31,43 @@ def cartesian_jit(M, d):
 def bounded(v, d):
     return np.all((v >= -d) & (v <= d) == True)
 
-@njit(cache=True)
-def find_row_index(A, b):
-    index = -1
-    row_count = A.shape[0]
-    for i in range(row_count):
-        if (np.array_equal(A[i],b)):
-            index = i
-            break
-    return index
+@njit()
+def v_to_ind(d, v): 
+    # binary to decimal
+    v = v + d
+    base = (2*d)+1
+    sum = 0
+    N = len(v)
+    for i in range(N):
+        sum += v[i]*(base**(N-1-i))
+    return int(sum)
 
 @njit(cache=True)
 def dynamic_table(A, d):
     
     m, n = A.shape
     D = np.empty((n+1,((2*d)+1)**m))
-    # D.fill(-3)
     permutations = cartesian_jit(m, d)
 
     # Build table D[][] in bottom up manner
     for i in range(n + 1):
-        # print(i)
         for v in permutations:
-            v_i = find_row_index(permutations, v)
+            v_i = v_to_ind(d, v)
             if (i==0):
                 if (np.count_nonzero(v)==0):
                     D[i][v_i] = True
                 else:
                     D[i][v_i] = False
-            elif (bounded(v - A[:,i-1], d) == True) and (D[i-1][find_row_index(permutations, v - A[:,i-1])] == True):
+            elif (bounded(v - A[:,i-1], d) == True) and (D[i-1][v_to_ind(d, v - A[:,i-1])] == True):
                     D[i][v_i] = True
-            elif (bounded(v + A[:,i-1], d) == True) and (D[i-1][find_row_index(permutations, v + A[:,i-1])] == True):
+            elif (bounded(v + A[:,i-1], d) == True) and (D[i-1][v_to_ind(d, v + A[:,i-1])] == True):
                     D[i][v_i] = True
             else:
                 D[i][v_i] = False
         
     boolean = False
     for v in permutations:
-        v_i = find_row_index(permutations, v)
+        v_i = v_to_ind(d, v)
         if D[n][v_i] == True:
             boolean = True
             break
@@ -76,7 +75,7 @@ def dynamic_table(A, d):
     return boolean
 
 @njit(cache=True)
-def calc_prefix_disc(incidence):
+def calc_prefix_disc_dp(incidence):
     prefix_disc = -1
     m, n = incidence.shape
     for d in range(2*m):
