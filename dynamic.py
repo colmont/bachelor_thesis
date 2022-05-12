@@ -31,7 +31,7 @@ def cartesian_jit(M, d):
 def bounded(v, d):
     return np.all((v >= -d) & (v <= d) == True)
 
-@njit()
+@njit(cache=True)
 def v_to_ind(d, v): 
     # binary to decimal
     v = v + d
@@ -46,7 +46,8 @@ def v_to_ind(d, v):
 def dynamic_table(A, d):
     
     m, n = A.shape
-    D = np.empty((n+1,((2*d)+1)**m))
+    D_1 = np.empty(((2*d)+1)**m)
+    D_2 = np.empty(((2*d)+1)**m)
     permutations = cartesian_jit(m, d)
 
     # Build table D[][] in bottom up manner
@@ -55,20 +56,22 @@ def dynamic_table(A, d):
             v_i = v_to_ind(d, v)
             if (i==0):
                 if (np.count_nonzero(v)==0):
-                    D[i][v_i] = True
+                    D_2[v_i] = True
                 else:
-                    D[i][v_i] = False
-            elif (bounded(v - A[:,i-1], d) == True) and (D[i-1][v_to_ind(d, v - A[:,i-1])] == True):
-                    D[i][v_i] = True
-            elif (bounded(v + A[:,i-1], d) == True) and (D[i-1][v_to_ind(d, v + A[:,i-1])] == True):
-                    D[i][v_i] = True
+                    D_2[v_i] = False
+            elif (bounded(v - A[:,i-1], d) == True) and (D_1[v_to_ind(d, v - A[:,i-1])] == True):
+                    D_2[v_i] = True
+            elif (bounded(v + A[:,i-1], d) == True) and (D_1[v_to_ind(d, v + A[:,i-1])] == True):
+                    D_2[v_i] = True
             else:
-                D[i][v_i] = False
+                D_2[v_i] = False
+        D_1 = D_2
+        D_2 = np.empty(((2*d)+1)**m)
         
     boolean = False
     for v in permutations:
         v_i = v_to_ind(d, v)
-        if D[n][v_i] == True:
+        if D_1[v_i] == True:
             boolean = True
             break
     
