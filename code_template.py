@@ -29,8 +29,8 @@ import matplotlib.pyplot as plt
 from numba import njit
 
 
-N = 50 # number of elements
-M = 4 # number of sets
+N = 7 # number of elements
+M = 7 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions = 1000 #number of new sessions per iteration
@@ -83,10 +83,10 @@ def calc_score(state):
 	"""
 	first_construction = state[0:DECISIONS]
 	incidence = np.reshape(first_construction, (M, N))
-	# disc = calc_prefix_disc_simple(incidence)
-	prefix_disc = calc_prefix_disc_dp(incidence)
+	prefix_disc, count = calc_prefix_disc_simple(incidence)
+	# prefix_disc = calc_prefix_disc_dp(incidence)
 
-	return prefix_disc
+	return prefix_disc - 0.001*count
 
 ####No need to change anything below here. 
 
@@ -226,7 +226,7 @@ for i in range(1000000): #1000000 generations should be plenty
 	#generate new sessions
 	#performance can be improved with joblib
 	tic = time.time()
-	sessions = generate_session(model,n_sessions,0) #change 0 to 1 to print out how much time each step in generate_session takes 
+	sessions = generate_session(model,n_sessions,1) #change 0 to 1 to print out how much time each step in generate_session takes 
 	sessgen_time = time.time()-tic
 	tic = time.time()
 	
