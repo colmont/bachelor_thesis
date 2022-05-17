@@ -141,8 +141,8 @@ def generate_session(agent, n_sessions, verbose = 1):
 		step += 1		
 		tic = time.time()
 		# prob = agent.predict(states[:,:,step-1], batch_size = n_sessions)
-		data_predict = tf.data.Dataset.from_tensor_slices(list(states[:,:,step-1])).batch(n_sessions)
-		prob = agent.predict(data_predict, batch_size = n_sessions, workers=4, use_multiprocessing=True)
+		data_predict = tf.data.Dataset.from_tensor_slices(list(states[:,:,step-1])).batch(250)
+		prob = agent.predict(data_predict, batch_size = 250, workers=4, use_multiprocessing=True)
 		pred_time += time.time()-tic
 		tic = time.time()
 		actions, state_next, states, terminal = jitted_play_game(actions,state_next,states,prob, step, total_score)
