@@ -1,4 +1,5 @@
 # Partial source: https://github.com/privet-kitty/hypergraph-discrepancy
+from itertools import count
 import numpy as np
 from numba import njit
 
@@ -101,6 +102,7 @@ def calc_prefix_disc_simple(incidence):
     n = incidence.shape[1]
     min_disc = n
     opt_coloring = np.ones(n) #FIXME: dtype=int
+    count = 0
     for c in cartesian_jit(n):
         if c[0] == 1: # fix first element of coloring
             prefix_UB = 0
@@ -111,7 +113,10 @@ def calc_prefix_disc_simple(incidence):
             if prefix_UB < min_disc:
                 min_disc = prefix_UB
                 opt_coloring = c
-    return min_disc #, np.asarray(opt_coloring),
+                count = 0
+            elif prefix_UB == min_disc:
+                count += 1
+    return min_disc, count #, np.asarray(opt_coloring)
 
 @njit()
 def symmetry(incidence):
