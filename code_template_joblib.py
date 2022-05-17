@@ -149,7 +149,7 @@ def generate_session(agent, n_sessions, verbose = 1):
 		play_time += time.time()-tic
 		
 		if terminal:
-			total_score = Parallel(n_jobs=1)(delayed(jitted_calc_score)(state_next,i) for i in range(n_sessions))
+			total_score = Parallel(n_jobs=-1)(delayed(jitted_calc_score)(state_next,i) for i in range(n_sessions))
 			break
 	if (verbose):
 		print("Predict: "+str(pred_time)+", play: " + str(play_time))
