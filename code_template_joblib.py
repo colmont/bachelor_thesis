@@ -15,12 +15,10 @@ from dis import dis
 import networkx as nx #for various graph parameters, such as eigenvalues, macthing number, etc. Does not work with numba (yet)
 import random
 import numpy as np
-from tensorflow.keras.utils import to_categorical
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import SGD, Adam
-from tensorflow.keras.models import load_model
-from statistics import mean
 from hypergraph_njit import calc_prefix_disc_simple
 from dynamic import calc_prefix_disc_dp
 import pickle
@@ -30,8 +28,8 @@ from numba import njit, prange
 from joblib import Parallel, delayed
 
 
-N = 100 # number of elements
-M = 3 # number of sets
+N = 20 # number of elements
+M = 4 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions = 1000 #number of new sessions per iteration
@@ -142,7 +140,9 @@ def generate_session(agent, n_sessions, verbose = 1):
 	while (True):
 		step += 1		
 		tic = time.time()
-		prob = agent.predict(states[:,:,step-1], batch_size = n_sessions) 
+		# prob = agent.predict(states[:,:,step-1], batch_size = n_sessions)
+		data_predict = tf.data.Dataset.from_tensor_slices(list(states[:,:,step-1])).batch(n_sessions)
+		prob = agent.predict(data_predict, batch_size = n_sessions, workers=4, use_multiprocessing=True)
 		pred_time += time.time()-tic
 		tic = time.time()
 		actions, state_next, states, terminal = jitted_play_game(actions,state_next,states,prob, step, total_score)
@@ -227,7 +227,7 @@ for i in range(1000000): #1000000 generations should be plenty
 	#generate new sessions
 	#performance can be improved with joblib
 	tic = time.time()
-	sessions = generate_session(model,n_sessions,0) #change 0 to 1 to print out how much time each step in generate_session takes 
+	sessions = generate_session(model,n_sessions,1) #change 0 to 1 to print out how much time each step in generate_session takes 
 	sessgen_time = time.time()-tic
 	tic = time.time()
 	
