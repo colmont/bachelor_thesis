@@ -28,8 +28,8 @@ from numba import njit, prange
 from joblib import Parallel, delayed
 
 
-N = 20 # number of elements
-M = 4 # number of sets
+N = 69 # number of elements
+M = 3 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions = 1000 #number of new sessions per iteration
@@ -120,7 +120,12 @@ def play_game(actions, state_next, states, prob, step, total_score):
 
 jitted_play_game = njit()(play_game)
 
-def generate_session(agent, n_sessions, verbose = 1):	
+def predict_joblib(states, step, agent, workers):
+	batches = np.array_split(states[:,:,step-1], workers, axis=0)
+	matrix = np.array(Parallel(n_jobs=-1)(delayed(agent.predict)(batch) for batch in batches))
+	return matrix.flatten()
+
+def generate_session(agent, n_sessions, verbose = 1):
 	"""
 	Play n_session games using agent neural network.
 	Terminate when games finish 
@@ -140,9 +145,9 @@ def generate_session(agent, n_sessions, verbose = 1):
 	while (True):
 		step += 1		
 		tic = time.time()
+		# data_predict = tf.data.Dataset.from_tensor_slices(list(states[:,:,step-1])).batch(250)
 		# prob = agent.predict(states[:,:,step-1], batch_size = n_sessions)
-		data_predict = tf.data.Dataset.from_tensor_slices(list(states[:,:,step-1])).batch(250)
-		prob = agent.predict(data_predict, batch_size = 250, workers=4, use_multiprocessing=True)
+		prob = predict_joblib(states, step, agent, 4)
 		pred_time += time.time()-tic
 		tic = time.time()
 		actions, state_next, states, terminal = jitted_play_game(actions,state_next,states,prob, step, total_score)
