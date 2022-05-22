@@ -11,7 +11,7 @@
 #Use this file as a template if you are able to use numba njit() for the calc_score function in your problem.
 #Otherwise, if this is not an option, modify the simpler code in the *demos* folder
 
-from dis import dis
+from itertools import count
 import networkx as nx #for various graph parameters, such as eigenvalues, macthing number, etc. Does not work with numba (yet)
 import random
 import numpy as np
@@ -20,7 +20,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import SGD, Adam
 from hypergraph_njit import calc_prefix_disc_simple
-from dynamic import calc_prefix_disc_dp
+from dynamic import calc_prefix_disc_dp_count
 import pickle
 import time
 import matplotlib.pyplot as plt
@@ -28,8 +28,8 @@ from numba import njit, prange
 from joblib import Parallel, delayed
 
 
-N = 69 # number of elements
-M = 3 # number of sets
+N = 50 # number of elements
+M = 4 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions = 1000 #number of new sessions per iteration
@@ -84,9 +84,9 @@ def calc_score(states,i):
 	first_construction = state[0:DECISIONS]
 	incidence = np.reshape(first_construction, (M, N))
 	# disc = calc_prefix_disc_simple(incidence)
-	prefix_disc = calc_prefix_disc_dp(incidence)
+	prefix_disc, count = calc_prefix_disc_dp_count(incidence)
 
-	return prefix_disc
+	return prefix_disc - 0.001*count
 
 ####No need to change anything below here. 
 
@@ -120,10 +120,11 @@ def play_game(actions, state_next, states, prob, step, total_score):
 
 jitted_play_game = njit()(play_game)
 
-def predict_joblib(states, step, agent, workers):
-	batches = np.array_split(states[:,:,step-1], workers, axis=0)
-	matrix = np.array(Parallel(n_jobs=-1)(delayed(agent.predict)(batch) for batch in batches))
-	return matrix.flatten()
+# # Tried to improve speed by distributing prediction. Turned out to decrease speed.
+# def predict_joblib(states, step, agent, workers):
+# 	batches = np.array_split(states[:,:,step-1], workers, axis=0)
+# 	matrix = np.array(Parallel(n_jobs=-1)(delayed(agent.predict)(batch) for batch in batches))
+# 	return matrix.flatten()
 
 def generate_session(agent, n_sessions, verbose = 1):
 	"""
@@ -145,16 +146,17 @@ def generate_session(agent, n_sessions, verbose = 1):
 	while (True):
 		step += 1		
 		tic = time.time()
-		# data_predict = tf.data.Dataset.from_tensor_slices(list(states[:,:,step-1])).batch(250)
-		# prob = agent.predict(states[:,:,step-1], batch_size = n_sessions)
-		prob = predict_joblib(states, step, agent, 4)
+		prob = agent.predict(states[:,:,step-1], batch_size = n_sessions)
+		# prob = predict_joblib(states, step, agent, 4) # distributed version
 		pred_time += time.time()-tic
 		tic = time.time()
 		actions, state_next, states, terminal = jitted_play_game(actions,state_next,states,prob, step, total_score)
 		play_time += time.time()-tic
 		
 		if terminal:
+			tic = time.time()
 			total_score = Parallel(n_jobs=-1)(delayed(jitted_calc_score)(state_next,i) for i in range(n_sessions))
+			play_time += time.time()-tic
 			break
 	if (verbose):
 		print("Predict: "+str(pred_time)+", play: " + str(play_time))
