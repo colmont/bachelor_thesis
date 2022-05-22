@@ -1,4 +1,5 @@
 # Partial source: email from Lars
+from xmlrpc.client import boolean
 import numpy as np
 from numba import njit
 
@@ -78,6 +79,45 @@ def dynamic_table(A, d):
     return boolean
 
 @njit(cache=True)
+def dynamic_table_count(A, d):
+    
+    m, n = A.shape
+    D_1 = np.empty(((2*d)+1)**m)
+    D_2 = np.empty(((2*d)+1)**m)
+    permutations = cartesian_jit(m, d)
+    
+    # Build table D[][] in bottom up manner
+    for i in range(n + 1):
+        for v in permutations:
+            v_i = v_to_ind(d, v)
+            if (i==0):
+                if (np.count_nonzero(v)==0):
+                    D_2[v_i] = 1
+                else:
+                    D_2[v_i] = 0
+            else:
+                min = 0
+                plus = 0
+                if (bounded(v - A[:,i-1], d) == True):
+                    min = D_1[v_to_ind(d, v - A[:,i-1])]
+                if (bounded(v + A[:,i-1], d) == True):
+                    plus = D_1[v_to_ind(d, v + A[:,i-1])]
+                D_2[v_i] = min + plus
+        D_1 = D_2
+        D_2 = np.empty(((2*d)+1)**m)
+        
+    count = 0
+    for v in permutations:
+        v_i = v_to_ind(d, v)
+        count += D_1[v_i]
+    
+    boolean = False
+    if count > 0:
+        boolean = True
+
+    return boolean, count
+
+@njit(cache=True)
 def calc_prefix_disc_dp(incidence):
     prefix_disc = -1
     m, n = incidence.shape
@@ -86,3 +126,15 @@ def calc_prefix_disc_dp(incidence):
             prefix_disc = d
             break
     return prefix_disc
+
+@njit(cache=True)
+def calc_prefix_disc_dp_count(incidence):
+    prefix_disc = -1
+    count = -1
+    m, n = incidence.shape
+    for d in range(2*m):
+        boolean, count = dynamic_table_count(incidence, d)
+        if(boolean == True):
+            prefix_disc = d
+            break
+    return prefix_disc, count
