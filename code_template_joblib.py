@@ -26,10 +26,11 @@ import time
 import matplotlib.pyplot as plt
 from numba import njit, prange
 from joblib import Parallel, delayed
+import math
 
 
-N = 100 # number of elements
-M = 4 # number of sets
+N = 30 # number of elements
+M = 7 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions = 1000 #number of new sessions per iteration
@@ -86,7 +87,7 @@ def calc_score(states,i):
 	# disc = calc_prefix_disc_simple(incidence)
 	prefix_disc, count = calc_prefix_disc_dp_count(incidence)
 
-	return prefix_disc - 0.00000000000001*count
+	return prefix_disc - (0.0001*math.log(count))
 
 ####No need to change anything below here. 
 
