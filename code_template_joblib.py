@@ -86,7 +86,7 @@ def calc_score(states,i):
 	# disc = calc_prefix_disc_simple(incidence)
 	prefix_disc, count = calc_prefix_disc_dp_count(incidence)
 
-	return prefix_disc - 0.0001*count
+	return prefix_disc - 0.00000000000001*count
 
 ####No need to change anything below here. 
 
@@ -146,7 +146,7 @@ def generate_session(agent, n_sessions, verbose = 1):
 	while (True):
 		step += 1		
 		tic = time.time()
-		prob = agent.predict(states[:,:,step-1], batch_size = n_sessions)
+		prob = agent.predict(states[:,:,step-1], batch_size = n_sessions/4)
 		# prob = predict_joblib(states, step, agent, 4) # distributed version
 		pred_time += time.time()-tic
 		tic = time.time()
