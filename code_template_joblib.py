@@ -28,7 +28,7 @@ from numba import njit, prange
 from joblib import Parallel, delayed
 
 
-N = 50 # number of elements
+N = 100 # number of elements
 M = 4 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
@@ -86,7 +86,7 @@ def calc_score(states,i):
 	# disc = calc_prefix_disc_simple(incidence)
 	prefix_disc, count = calc_prefix_disc_dp_count(incidence)
 
-	return prefix_disc - 0.001*count
+	return prefix_disc - 0.0000000000001*count
 
 ####No need to change anything below here. 
 
