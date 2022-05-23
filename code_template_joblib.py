@@ -146,7 +146,7 @@ def generate_session(agent, n_sessions, verbose = 1):
 	while (True):
 		step += 1		
 		tic = time.time()
-		prob = agent.predict(states[:,:,step-1], batch_size = n_sessions/4)
+		prob = agent.predict(states[:,:,step-1], batch_size = int(n_sessions/4))
 		# prob = predict_joblib(states, step, agent, 4) # distributed version
 		pred_time += time.time()-tic
 		tic = time.time()
