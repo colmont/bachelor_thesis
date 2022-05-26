@@ -18,7 +18,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras.optimizers import SGD, Adam, Nadam
 from hypergraph_njit import calc_prefix_disc_simple
 from dynamic import calc_prefix_disc_dp_count
 import pickle
@@ -66,8 +66,10 @@ model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 model.add(Dense(1, activation="sigmoid"))
 model.build((None, observation_space))
-#model.compile(loss="binary_crossentropy", optimizer=SGD(learning_rate = LEARNING_RATE)) #Adam optimizer also works well, with lower learning rate
-model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = 0.0003)) #Adam optimizer also works well, with lower learning rate
+# model.compile(loss="binary_crossentropy", optimizer=SGD(learning_rate = LEARNING_RATE)) #Adam optimizer also works well, with lower learning rate
+# model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = 0.0003)) #Adam optimizer also works well, with lower learning rate
+model.compile(loss="binary_crossentropy", optimizer=Nadam(learning_rate = 0.00003)) #Adam optimizer also works well, with lower learning rate
+
 
 print(model.summary())
 
