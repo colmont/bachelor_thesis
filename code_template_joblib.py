@@ -25,8 +25,8 @@ from joblib import Parallel, delayed
 import math
 
 
-N = 100 # number of elements
-M = 7 # number of sets
+N = 16 # number of elements
+M = 16 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions = 1000 #number of new sessions per iteration
@@ -82,8 +82,8 @@ def calc_score(states,i):
 	state = states[i]
 	first_construction = state[0:DECISIONS]
 	incidence = np.reshape(first_construction, (M, N))
-	# disc = calc_prefix_disc_simple(incidence)
-	prefix_disc, count = calc_prefix_disc_dp_count(incidence)
+	prefix_disc, count = calc_prefix_disc_simple(incidence)
+	# prefix_disc, count = calc_prefix_disc_dp_count(incidence)
 
 	return prefix_disc - (0.0001*math.log(count))
 
@@ -145,7 +145,7 @@ def generate_session(agent, n_sessions, verbose = 1):
 	while (True):
 		step += 1		
 		tic = time.time()
-		prob = agent.predict(states[:,:,step-1], verbose=0, batch_size=n_sessions)
+		prob = agent.predict(states[:,:,step-1], verbose=0) # batch_size=n_sessions
 		# prob = predict_joblib(states, step, agent, 4) # distributed version
 		pred_time += time.time()-tic
 		tic = time.time()
