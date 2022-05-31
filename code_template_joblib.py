@@ -11,11 +11,8 @@
 #Use this file as a template if you are able to use numba njit() for the calc_score function in your problem.
 #Otherwise, if this is not an option, modify the simpler code in the *demos* folder
 
-from itertools import count
-import networkx as nx #for various graph parameters, such as eigenvalues, macthing number, etc. Does not work with numba (yet)
 import random
 import numpy as np
-import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import SGD, Adam, Nadam
@@ -23,13 +20,12 @@ from hypergraph_njit import calc_prefix_disc_simple
 from dynamic import calc_prefix_disc_dp_count
 import pickle
 import time
-import matplotlib.pyplot as plt
-from numba import njit, prange
+from numba import njit
 from joblib import Parallel, delayed
 import math
 
 
-N = 30 # number of elements
+N = 100 # number of elements
 M = 7 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
