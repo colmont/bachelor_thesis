@@ -145,7 +145,7 @@ def generate_session(agent, n_sessions, verbose = 1):
 	while (True):
 		step += 1		
 		tic = time.time()
-		prob = agent.predict(states[:,:,step-1]) #, batch_size = n_sessions/4)
+		prob = agent.predict(states[:,:,step-1], verbose=0, batch_size=n_sessions)
 		# prob = predict_joblib(states, step, agent, 4) # distributed version
 		pred_time += time.time()-tic
 		tic = time.time()
@@ -264,7 +264,7 @@ for i in range(1000000): #1000000 generations should be plenty
 	select3_time = time.time()-tic
 	
 	tic = time.time()
-	model.fit(elite_states, elite_actions) #learn from the elite sessions
+	model.fit(elite_states, elite_actions, verbose=0) #learn from the elite sessions
 	fit_time = time.time()-tic
 	
 	tic = time.time()
