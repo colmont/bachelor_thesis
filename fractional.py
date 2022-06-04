@@ -21,10 +21,8 @@ from hypergraph_njit import calc_prefix_disc_simple
 from dynamic import calc_prefix_disc_dp_count
 import pickle
 import time
-import matplotlib.pyplot as plt
-from numba import njit, prange
+from numba import njit
 from joblib import Parallel, delayed
-import math
 
 
 N = 7  # number of elements
@@ -36,8 +34,8 @@ percentile = 93 #top 100-X percentile we are learning from
 super_percentile = 94 #top 100-X percentile that survives to next iteration
 
 FIRST_LAYER_NEURONS = 128 #Number of neurons in the hidden layers.
-SECOND_LAYER_NEURONS = 64
-THIRD_LAYER_NEURONS = 4
+SECOND_LAYER_NEURONS = 256
+THIRD_LAYER_NEURONS = 128
 
 n_actions = 2 #The size of the alphabet. In this file we will assume this is 2. There are a few things we need to change when the alphabet size is larger,
 			  #such as one-hot encoding the input, and using categorical_crossentropy as a loss function.
@@ -64,7 +62,7 @@ model.add(Dense(FIRST_LAYER_NEURONS,  activation="relu"))
 model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
 # model.add(Dropout(0.5))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
-model.add(Dense(1, activation="sigmoid"))
+model.add(Dense(11, activation="sigmoid"))
 model.build((None, observation_space))
 model.compile(loss="mse", optimizer=Nadam(learning_rate=0.00003)) #Adam optimizer also works well, with lower learning rate
 
@@ -91,12 +89,29 @@ def calc_score(states,i):
 
 jitted_calc_score = njit()(calc_score)
 
+b = np.array([x / 10.0 for x in range(0, 11, 1)])
+
+@njit()
+def prob_distr(a, b):
+    length = len(a)
+    sum = np.sum(a)
+    for i in range(length):
+        a[i] = a[i]/sum
+    a = np.cumsum(a)
+    rand = np.random.rand()
+    final = -100
+    for i in range(length):
+        if rand < a[i]:
+            final = b[i]
+            break
+    return final
 
 def play_game(actions, state_next, states, prob, step, total_score):
 		
 	for i in range(n_sessions):
 	
-		action = prob[i][0] + 0.1*np.random.rand()
+		action = prob_distr(prob[i],b)
+		# action = prob[i][0] + 0.1*np.random.rand()
 		actions[i][step-1] = action
 		state_next[i] = states[i,:,step-1]
 
