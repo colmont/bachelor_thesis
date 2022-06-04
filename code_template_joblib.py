@@ -85,7 +85,7 @@ def calc_score(states,i):
 	prefix_disc, count = calc_prefix_disc_simple(incidence)
 	# prefix_disc, count = calc_prefix_disc_dp_count(incidence)
 
-	return prefix_disc - (0.0001*math.log(count))
+	return prefix_disc - (0.0001*math.log(count+1))
 
 ####No need to change anything below here. 
 
