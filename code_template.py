@@ -11,26 +11,20 @@
 #Use this file as a template if you are able to use numba njit() for the calc_score function in your problem.
 #Otherwise, if this is not an option, modify the simpler code in the *demos* folder
 
-from dis import dis
-import networkx as nx #for various graph parameters, such as eigenvalues, macthing number, etc. Does not work with numba (yet)
 import random
 import numpy as np
-from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import SGD, Adam
-from tensorflow.keras.models import load_model
-from statistics import mean
 from hypergraph_njit import calc_prefix_disc_simple
 from dynamic import calc_prefix_disc_dp
 import pickle
 import time
-import matplotlib.pyplot as plt
 from numba import njit
 
 
-N = 7 # number of elements
-M = 7 # number of sets
+N = 16 # number of elements
+M = 16 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions = 1000 #number of new sessions per iteration
@@ -83,10 +77,9 @@ def calc_score(state):
 	"""
 	first_construction = state[0:DECISIONS]
 	incidence = np.reshape(first_construction, (M, N))
-	prefix_disc, count = calc_prefix_disc_simple(incidence)
-	# prefix_disc = calc_prefix_disc_dp(incidence)
+	prefix_disc = calc_prefix_disc_dp(incidence)
 
-	return prefix_disc - 0.001*count
+	return prefix_disc
 
 ####No need to change anything below here. 
 
