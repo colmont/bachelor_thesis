@@ -101,7 +101,7 @@ def prob_distr(a, b):
     rand = np.random.rand()
     final = -100
     for i in range(length):
-        if rand < a[i]:
+        if rand <= a[i]:
             final = b[i]
             break
     return final
