@@ -14,10 +14,9 @@
 import random
 import numpy as np
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import SGD, Adam, Adagrad, Adadelta, RMSprop, Nadam
-from tensorflow.keras.layers import Dropout
-from hypergraph_njit import calc_prefix_disc_simple
+from hypergraph_njit import calc_prefix_disc_simple, find_opt_coloring
 from dynamic import calc_prefix_disc_dp_count
 import pickle
 import time
@@ -33,9 +32,9 @@ n_sessions = 1000 #number of new sessions per iteration
 percentile = 93 #top 100-X percentile we are learning from
 super_percentile = 94 #top 100-X percentile that survives to next iteration
 
-FIRST_LAYER_NEURONS = 128 #Number of neurons in the hidden layers.
-SECOND_LAYER_NEURONS = 256
-THIRD_LAYER_NEURONS = 128
+FIRST_LAYER_NEURONS = 64 #Number of neurons in the hidden layers.
+SECOND_LAYER_NEURONS = 32
+THIRD_LAYER_NEURONS = 16
 
 n_actions = 2 #The size of the alphabet. In this file we will assume this is 2. There are a few things we need to change when the alphabet size is larger,
 			  #such as one-hot encoding the input, and using categorical_crossentropy as a loss function.
@@ -46,7 +45,7 @@ observation_space = 2*DECISIONS #Leave this at 2*DECISIONS. The input vector wil
 						  #Is there a better way to format the input to make it easier for the neural network to understand things?
 
 
-						  
+
 len_game = DECISIONS
 state_dim = (observation_space,)
 
@@ -64,7 +63,7 @@ model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 model.add(Dense(11, activation="sigmoid"))
 model.build((None, observation_space))
-model.compile(loss="mse", optimizer=Nadam(learning_rate=0.00003)) #Adam optimizer also works well, with lower learning rate
+model.compile(loss='categorical_crossentropy', optimizer=Nadam(learning_rate=0.00003)) #Adam optimizer also works well, with lower learning rate
 
 print(model.summary())
 
@@ -81,9 +80,10 @@ def calc_score(states,i):
 	state = states[i]
 	first_construction = state[0:DECISIONS]
 	incidence = np.reshape(first_construction, (M, N))
-	prefix_disc, count = calc_prefix_disc_simple(incidence)
+	# prefix_disc, count = calc_prefix_disc_simple(incidence)
+	opt_coloring, min_disc, count = find_opt_coloring(incidence)
 
-	return prefix_disc #- (0.0001*math.log(count))
+	return min_disc #- (0.0001*math.log(count))
 
 ####No need to change anything below here. 
 
@@ -276,7 +276,16 @@ for i in range(1000000): #1000000 generations should be plenty
 	select3_time = time.time()-tic
 	
 	tic = time.time()
-	model.fit(elite_states, elite_actions) #learn from the elite sessions
+
+	elite_actions_modified = np.empty([len(elite_actions),11])
+	for j in range(len(elite_actions)):
+		action = elite_actions[j]
+		action_array = np.zeros([11])
+		index = int(action*10)
+		action_array[index] = 1
+		elite_actions_modified[j,:] = action_array
+
+	model.fit(elite_states, elite_actions_modified) #learn from the elite sessions
 	fit_time = time.time()-tic
 	
 	tic = time.time()
