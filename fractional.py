@@ -99,7 +99,7 @@ def prob_distr(a, b):
         a[i] = a[i]/sum
     a = np.cumsum(a)
     rand = np.random.rand()
-    final = -100
+    final = 1.0
     for i in range(length):
         if rand <= a[i]:
             final = b[i]
