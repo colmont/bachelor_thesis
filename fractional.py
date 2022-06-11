@@ -61,7 +61,7 @@ model.add(Dense(FIRST_LAYER_NEURONS,  activation="relu"))
 model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
 # model.add(Dropout(0.5))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
-model.add(Dense(11, activation="sigmoid"))
+model.add(Dense(9, activation="sigmoid"))
 model.build((None, observation_space))
 model.compile(loss='categorical_crossentropy', optimizer=Nadam(learning_rate=0.00003)) #Adam optimizer also works well, with lower learning rate
 
@@ -89,7 +89,8 @@ def calc_score(states,i):
 
 jitted_calc_score = njit()(calc_score)
 
-b = np.array([x / 10.0 for x in range(0, 11, 1)])
+# b = np.array([x / 10.0 for x in range(0, 11, 1)])
+b = np.array([0.0,0.79, 0.82, 0.85, 0.88, 0.91, 0.94, 0.97, 1.0])
 
 @njit()
 def prob_distr(a, b):
