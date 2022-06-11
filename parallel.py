@@ -25,8 +25,8 @@ from joblib import Parallel, delayed
 import math
 
 
-N = 16 # number of elements
-M = 16 # number of sets
+N = 6 # number of elements
+M = 6 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions = 1000 #number of new sessions per iteration
@@ -285,21 +285,22 @@ for i in range(1000000): #1000000 generations should be plenty
 	print(	"Mean reward: " + str(mean_all_reward) + "\nSessgen: " + str(sessgen_time) + ", other: " + str(randomcomp_time) + ", select1: " + str(select1_time) + ", select2: " + str(select2_time) + ", select3: " + str(select3_time) +  ", fit: " + str(fit_time) + ", score: " + str(score_time)) 
 	
 	
-	if (i%20 == 1): #Write all important info to files every 20 iterations
-		with open('best_species_pickle_'+str(myRand)+'.txt', 'wb') as fp:
-			pickle.dump(super_actions, fp)
-		with open('best_species_txt_'+str(myRand)+'.txt', 'w') as f:
-			for item in super_actions:
-				f.write(str(item))
-				f.write("\n")
-		with open('best_species_rewards_'+str(myRand)+'.txt', 'w') as f:
-			for item in super_rewards:
-				f.write(str(item))
-				f.write("\n")
-		with open('best_100_rewards_'+str(myRand)+'.txt', 'a') as f:
-			f.write(str(mean_all_reward)+"\n")
-		with open('best_elite_rewards_'+str(myRand)+'.txt', 'a') as f:
-			f.write(str(mean_best_reward)+"\n")
+	# if (i%20 == 1): #Write all important info to files every 20 iterations
+	with open('best_species_pickle_'+str(myRand)+'.txt', 'wb') as fp:
+		pickle.dump(super_actions, fp)
+	with open('best_species_txt_'+str(myRand)+'.txt', 'w') as f:
+		for item in super_actions:
+			f.write(str(item))
+			f.write("\n")
+	with open('best_species_rewards_'+str(myRand)+'.txt', 'w') as f:
+		for item in super_rewards:
+			f.write(str(item))
+			f.write("\n")
+	with open('best_100_rewards_'+str(myRand)+'.txt', 'a') as f:
+		f.write(str(mean_all_reward)+"\n")
+	with open('best_elite_rewards_'+str(myRand)+'.txt', 'a') as f:
+		f.write(str(mean_best_reward)+"\n")
+		
 	if (i%200==2): # To create a timeline, like in Figure 3
 		with open('best_species_timeline_txt_'+str(myRand)+'.txt', 'a') as f:
 			f.write(str(super_actions[0]))
