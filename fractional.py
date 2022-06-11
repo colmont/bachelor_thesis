@@ -91,6 +91,7 @@ jitted_calc_score = njit()(calc_score)
 
 # b = np.array([x / 10.0 for x in range(0, 11, 1)])
 b = np.array([0.0,0.79, 0.82, 0.85, 0.88, 0.91, 0.94, 0.97, 1.0])
+b_list = [0.0,0.79, 0.82, 0.85, 0.88, 0.91, 0.94, 0.97, 1.0]
 
 @njit()
 def prob_distr(a, b):
@@ -278,11 +279,11 @@ for i in range(1000000): #1000000 generations should be plenty
 	
 	tic = time.time()
 
-	elite_actions_modified = np.empty([len(elite_actions),11])
+	elite_actions_modified = np.empty([len(elite_actions),len(b_list)])
 	for j in range(len(elite_actions)):
 		action = elite_actions[j]
-		action_array = np.zeros([11])
-		index = int(action*10)
+		action_array = np.zeros([len(b)])
+		index = b_list.index(action)
 		action_array[index] = 1
 		elite_actions_modified[j,:] = action_array
 
