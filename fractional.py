@@ -32,8 +32,8 @@ n_sessions = 1000 #number of new sessions per iteration
 percentile = 93 #top 100-X percentile we are learning from
 super_percentile = 94 #top 100-X percentile that survives to next iteration
 
-FIRST_LAYER_NEURONS = 64 #Number of neurons in the hidden layers.
-SECOND_LAYER_NEURONS = 32
+FIRST_LAYER_NEURONS = 128 #Number of neurons in the hidden layers.
+SECOND_LAYER_NEURONS = 64
 THIRD_LAYER_NEURONS = 16
 
 n_actions = 2 #The size of the alphabet. In this file we will assume this is 2. There are a few things we need to change when the alphabet size is larger,
@@ -63,7 +63,7 @@ model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 model.add(Dense(9, activation="sigmoid"))
 model.build((None, observation_space))
-model.compile(loss='categorical_crossentropy', optimizer=Nadam(learning_rate=0.00003)) #Adam optimizer also works well, with lower learning rate
+model.compile(loss='categorical_crossentropy', optimizer=Nadam(learning_rate=0.0003)) #Adam optimizer also works well, with lower learning rate
 
 print(model.summary())
 
