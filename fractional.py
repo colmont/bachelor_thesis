@@ -63,7 +63,7 @@ model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 model.add(Dense(9, activation="sigmoid"))
 model.build((None, observation_space))
-model.compile(loss='categorical_crossentropy', optimizer=Nadam(learning_rate=0.0003)) #Adam optimizer also works well, with lower learning rate
+model.compile(loss='categorical_crossentropy', optimizer=Nadam(learning_rate=0.003)) #Adam optimizer also works well, with lower learning rate
 
 print(model.summary())
 
