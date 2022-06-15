@@ -25,8 +25,8 @@ from joblib import Parallel, delayed
 import math
 
 
-N = 6 # number of elements
-M = 6 # number of sets
+N = 12 # number of elements
+M = 100 # number of sets
 DECISIONS = int(N*M)  # length of the word we are generating => adjency matrix stetched into one vector
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions = 1000 #number of new sessions per iteration
@@ -132,9 +132,9 @@ def generate_session(agent, n_sessions, verbose = 1):
 	
 	Code inspired by https://github.com/yandexdataschool/Practical_RL/blob/master/week01_intro/deep_crossentropy_method.ipynb
 	"""
-	states =  np.zeros([n_sessions, observation_space, len_game], dtype=int)
-	actions = np.zeros([n_sessions, len_game], dtype = int)
-	state_next = np.zeros([n_sessions,observation_space], dtype = int)
+	states =  np.zeros([n_sessions, observation_space, len_game], dtype=np.int8)
+	actions = np.zeros([n_sessions, len_game], dtype=np.int8)
+	state_next = np.zeros([n_sessions,observation_space], dtype=np.int8)
 	prob = np.zeros(n_sessions)
 	states[:,DECISIONS,0] = 1
 	step = 0
@@ -188,8 +188,8 @@ def select_elites(states_batch, actions_batch, rewards_batch, percentile=50):
 				for item in actions_batch[i]:
 					elite_actions.append(item)			
 			counter -= 1
-	elite_states = np.array(elite_states, dtype = int)	
-	elite_actions = np.array(elite_actions, dtype = int)	
+	elite_states = np.array(elite_states, dtype=np.int8)	
+	elite_actions = np.array(elite_actions, dtype=np.int8)	
 	return elite_states, elite_actions
 	
 def select_super_sessions(states_batch, actions_batch, rewards_batch, percentile=90):
@@ -212,14 +212,14 @@ def select_super_sessions(states_batch, actions_batch, rewards_batch, percentile
 				super_actions.append(actions_batch[i])
 				super_rewards.append(rewards_batch[i])
 				counter -= 1
-	super_states = np.array(super_states, dtype = int)
-	super_actions = np.array(super_actions, dtype = int)
+	super_states = np.array(super_states, dtype=np.int8)
+	super_actions = np.array(super_actions, dtype=np.int8)
 	super_rewards = np.array(super_rewards)
 	return super_states, super_actions, super_rewards
 	
 
-super_states =  np.empty((0,len_game,observation_space), dtype = int)
-super_actions = np.array([], dtype = int)
+super_states =  np.empty((0,len_game,observation_space), dtype=np.int8)
+super_actions = np.array([], dtype=np.int8)
 super_rewards = np.array([])
 sessgen_time = 0
 fit_time = 0
@@ -237,8 +237,8 @@ for i in range(1000000): #1000000 generations should be plenty
 	sessgen_time = time.time()-tic
 	tic = time.time()
 	
-	states_batch = np.array(sessions[0], dtype = int)
-	actions_batch = np.array(sessions[1], dtype = int)
+	states_batch = np.array(sessions[0], dtype=np.int8)
+	actions_batch = np.array(sessions[1], dtype=np.int8)
 	rewards_batch = np.array(sessions[2])
 	states_batch = np.transpose(states_batch,axes=[0,2,1])
 	
