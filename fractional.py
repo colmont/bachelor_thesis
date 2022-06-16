@@ -63,7 +63,7 @@ model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 model.add(Dense(9, activation="sigmoid"))
 model.build((None, observation_space))
-model.compile(loss='categorical_crossentropy', optimizer=Nadam(learning_rate=0.003)) #Adam optimizer also works well, with lower learning rate
+model.compile(loss='categorical_crossentropy', optimizer=Nadam(learning_rate=0.03)) #Adam optimizer also works well, with lower learning rate
 
 print(model.summary())
 
@@ -95,18 +95,21 @@ b_list = [0.0,0.79, 0.82, 0.85, 0.88, 0.91, 0.94, 0.97, 1.0]
 
 @njit()
 def prob_distr(a, b):
-    length = len(a)
-    sum = np.sum(a)
-    for i in range(length):
-        a[i] = a[i]/sum
-    a = np.cumsum(a)
-    rand = np.random.rand()
-    final = 1.0
-    for i in range(length):
-        if rand <= a[i]:
-            final = b[i]
-            break
-    return final
+	length = len(a)
+	sum = np.sum(a)
+	if sum == 0:
+		a = np.ones(length, dtype=np.float32)
+		sum = np.sum(a)
+	for i in range(length):
+		a[i] = a[i]/sum
+	a = np.cumsum(a)
+	rand = np.random.rand()
+	final = 1.0
+	for i in range(length):
+		if rand <= a[i]:
+			final = b[i]
+			break
+	return final
 
 def play_game(actions, state_next, states, prob, step, total_score):
 		
@@ -159,7 +162,7 @@ def generate_session(agent, n_sessions, verbose = 1):
 	while (True):
 		step += 1		
 		tic = time.time()
-		prob = agent.predict(states[:,:,step-1]) #, batch_size = n_sessions/4)
+		prob = agent.predict(states[:,:,step-1], verbose=0, batch_size=n_sessions) #FIXME: batch_size?
 		# prob = predict_joblib(states, step, agent, 4) # distributed version
 		pred_time += time.time()-tic
 		tic = time.time()
@@ -287,7 +290,7 @@ for i in range(1000000): #1000000 generations should be plenty
 		action_array[index] = 1
 		elite_actions_modified[j,:] = action_array
 
-	model.fit(elite_states, elite_actions_modified) #learn from the elite sessions
+	model.fit(elite_states, elite_actions_modified, verbose=0) #learn from the elite sessions
 	fit_time = time.time()-tic
 	
 	tic = time.time()
