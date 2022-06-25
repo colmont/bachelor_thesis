@@ -1,11 +1,17 @@
-# Partial source: email from Lars
-from xmlrpc.client import boolean
 import numpy as np
 from numba import njit
 
 @njit(cache=True)
 def cartesian_jit(M, d):
+    """
+    Function to compute all vectors v for dynamic table.
 
+    :param M: number of sets in set system
+    :type M: int
+    :param d: constant d used in dynamic program
+    :type d: int
+    :return: matrix, with each row being a possible vector v (of size 2M+1)
+    """
     numbers = np.array(list(range(-d,d+1)))
     arrays = [numbers for i in range(M)]
     
@@ -13,7 +19,6 @@ def cartesian_jit(M, d):
     for x in arrays:
         n *= x.size
     out = np.zeros((n, len(arrays)))
-
 
     for i in range(len(arrays)):
         m = int(n / arrays[i].size)
@@ -30,11 +35,28 @@ def cartesian_jit(M, d):
 
 @njit(cache=True)
 def bounded(v, d):
+    """
+    Function to determine if vector v is bounded by constant d.
+
+    :param d: constant d used in dynamic program
+    :type d: int
+    :param v: vector v from dynamic program
+    :type v: numpy.ndarray
+    :return: boolean, true if vector v is bounded by constant d
+    """
     return np.all((v >= -d) & (v <= d) == True)
 
 @njit(cache=True)
-def v_to_ind(d, v): 
-    # binary to decimal
+def v_to_ind(d, v):
+    """
+    Function that turns vector v into an index using bit numbering.
+
+    :param d: constant d used in dynamic program
+    :type d: int
+    :param v: vector v from dynamic program
+    :type v: numpy.ndarray
+    :return: index (int), so that vector v can be found quickly in dynamic table A
+    """
     v = v + d
     base = (2*d)+1
     sum = 0
@@ -45,13 +67,21 @@ def v_to_ind(d, v):
 
 @njit(cache=True)
 def dynamic_table(A, d):
-    
+    """
+    Using a dynamic table (see thesis), this function returns whether prefix-disc is smaller than d.
+
+    :param A: incidence matrix
+    :type A: numpy.ndarray
+    :param d: constant d used in dynamic program
+    :type d: int
+    :return: boolean (true if prefix-disc(A) <= d)
+    """
     m, n = A.shape
     D_1 = np.empty(((2*d)+1)**m)
     D_2 = np.empty(((2*d)+1)**m)
     permutations = cartesian_jit(m, d)
 
-    # Build table D[][] in bottom up manner
+    # Build table D[][] in bottom up manner.
     for i in range(n + 1):
         for v in permutations:
             v_i = v_to_ind(d, v)
@@ -69,6 +99,7 @@ def dynamic_table(A, d):
         D_1 = D_2
         D_2 = np.empty(((2*d)+1)**m)
         
+    # Check whether there exists a v for which D[n,v] is true.
     boolean = False
     for v in permutations:
         v_i = v_to_ind(d, v)
@@ -80,7 +111,15 @@ def dynamic_table(A, d):
 
 @njit(cache=True)
 def dynamic_table_count(A, d):
-    
+    """
+    Using a dynamic table (see thesis), this function returns whether prefix-disc is smaller than d and 
+    how many colorings lead to this prefix discrepancy.
+
+    :param A: incidence matrix
+    :type A: numpy.ndarray
+    :param d: constant d used in dynamic program
+    :return: boolean (true if prefix-disc(A) <= d) + count (# of colorings)
+    """
     m, n = A.shape
     D_1 = np.empty(((2*d)+1)**m)
     D_2 = np.empty(((2*d)+1)**m)
@@ -119,6 +158,13 @@ def dynamic_table_count(A, d):
 
 @njit(cache=True)
 def calc_prefix_disc_dp(incidence):
+    """
+    Function that augments d progressively and returns the first d for which dynamic_table(A,d) is true.
+
+    :param incidence: incidence matrix
+    :type incidence: numpy.ndarray
+    :return: prefix-disc (int) of incidence matrix
+    """
     prefix_disc = -1
     m, n = incidence.shape
     for d in range(2*m):
@@ -129,6 +175,14 @@ def calc_prefix_disc_dp(incidence):
 
 @njit(cache=True)
 def calc_prefix_disc_dp_count(incidence):
+    """
+    Function that augments d progressively and returns the first d for which dynamic_table(A,d) is true.
+    Also, this function returns the number of colorings that lead to this particular prefix-disc.
+
+    :param incidence: incidence matrix
+    :type incidence: numpy.ndarray
+    :return: prefix-disc (int) of incidence matrix + # of colorings
+    """
     prefix_disc = -1
     count = -1
     m, n = incidence.shape
