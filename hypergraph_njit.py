@@ -1,5 +1,3 @@
-# Partial source: https://github.com/privet-kitty/hypergraph-discrepancy
-from itertools import count
 import numpy as np
 from numba import njit
 
@@ -21,7 +19,6 @@ def dot(A,b):
             c[i] += A[i][j] * b[j]
     return c
 
-# 
 @njit()
 def calc_disc(incidence, coloring):
     """
