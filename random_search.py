@@ -1,13 +1,14 @@
 import numpy as np
 from numba import njit
-from hypergraph_njit import calc_prefix_disc_simple
+from discrepancy import calc_prefix_disc_simple
 
 M = 7
 N = 7
+trials = 100
 
 print("running...")
 
-for i in range(100):
+for i in range(trials):
 
     found = False
     counter = 1

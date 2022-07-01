@@ -15,8 +15,8 @@ import random
 import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import SGD, Adam, Nadam
-from hypergraph_njit import calc_prefix_disc_simple
+from tensorflow.keras.optimizers import Nadam
+from discrepancy import calc_prefix_disc_simple
 from dynamic import calc_prefix_disc_dp_count
 import pickle
 import time
@@ -62,9 +62,7 @@ model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 model.add(Dense(1, activation="sigmoid"))
 model.build((None, observation_space))
-# model.compile(loss="binary_crossentropy", optimizer=SGD(learning_rate = LEARNING_RATE)) #Adam optimizer also works well, with lower learning rate
-# model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = 0.0003)) #Adam optimizer also works well, with lower learning rate
-model.compile(loss="binary_crossentropy", optimizer=Nadam(learning_rate = 0.00003)) #Adam optimizer also works well, with lower learning rate
+model.compile(loss="binary_crossentropy", optimizer=Nadam())
 
 
 print(model.summary())
@@ -285,7 +283,6 @@ for i in range(1000000): #1000000 generations should be plenty
 	print(	"Mean reward: " + str(mean_all_reward) + "\nSessgen: " + str(sessgen_time) + ", other: " + str(randomcomp_time) + ", select1: " + str(select1_time) + ", select2: " + str(select2_time) + ", select3: " + str(select3_time) +  ", fit: " + str(fit_time) + ", score: " + str(score_time)) 
 	
 	
-	# if (i%20 == 1): #Write all important info to files every 20 iterations
 	with open('best_species_pickle_'+str(myRand)+'.txt', 'wb') as fp:
 		pickle.dump(super_actions, fp)
 	with open('best_species_txt_'+str(myRand)+'.txt', 'w') as f:

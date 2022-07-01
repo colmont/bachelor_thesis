@@ -14,9 +14,9 @@
 import random
 import numpy as np
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.optimizers import SGD, Adam, Adagrad, Adadelta, RMSprop, Nadam
-from hypergraph_njit import calc_prefix_disc_simple, find_opt_coloring
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Nadam
+from discrepancy import calc_prefix_disc_simple, find_opt_coloring
 from dynamic import calc_prefix_disc_dp_count
 import pickle
 import time
@@ -57,13 +57,11 @@ INF = 1000000
 
 model = Sequential()
 model.add(Dense(FIRST_LAYER_NEURONS,  activation="relu"))
-# model.add(Dropout(0.5))
 model.add(Dense(SECOND_LAYER_NEURONS, activation="relu"))
-# model.add(Dropout(0.5))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
-model.add(Dense(9, activation="sigmoid"))
+model.add(Dense(9, activation="sigmoid"))						# here, 9 represents amount of output possibilities, can simply be changed if necessary
 model.build((None, observation_space))
-model.compile(loss='categorical_crossentropy', optimizer=Nadam(learning_rate=0.03)) #Adam optimizer also works well, with lower learning rate
+model.compile(loss='categorical_crossentropy', optimizer=Nadam())
 
 print(model.summary())
 
@@ -83,18 +81,27 @@ def calc_score(states,i):
 	# prefix_disc, count = calc_prefix_disc_simple(incidence)
 	opt_coloring, min_disc, count = find_opt_coloring(incidence)
 
-	return min_disc #- (0.0001*math.log(count))
+	return min_disc
 
 ####No need to change anything below here. 
 
 jitted_calc_score = njit()(calc_score)
 
-# b = np.array([x / 10.0 for x in range(0, 11, 1)])
-b = np.array([0.0,0.79, 0.82, 0.85, 0.88, 0.91, 0.94, 0.97, 1.0])
-b_list = [0.0,0.79, 0.82, 0.85, 0.88, 0.91, 0.94, 0.97, 1.0]
+b = np.array([0.0,0.79, 0.82, 0.85, 0.88, 0.91, 0.94, 0.97, 1.0])	# b represents all possible output values of the NN (here, there are  9)
+b_list = [0.0,0.79, 0.82, 0.85, 0.88, 0.91, 0.94, 0.97, 1.0]	# b represents all possible output values of the NN (here, there are  9)
 
 @njit()
 def prob_distr(a, b):
+	"""
+    Function that samples a number from b, according to the probability
+	distribution in a.
+
+    :param a: probabilities outputted by NN
+    :type a: list
+    :param b: possible values to fill in incidence matrices
+    :type b: list
+    :return: sampled number x from list b
+	"""
 	length = len(a)
 	sum = np.sum(a)
 	if sum == 0:
@@ -116,7 +123,6 @@ def play_game(actions, state_next, states, prob, step, total_score):
 	for i in range(n_sessions):
 	
 		action = prob_distr(prob[i],b)
-		# action = prob[i][0] + 0.1*np.random.rand()
 		actions[i][step-1] = action
 		state_next[i] = states[i,:,step-1]
 
@@ -163,7 +169,6 @@ def generate_session(agent, n_sessions, verbose = 1):
 		step += 1		
 		tic = time.time()
 		prob = agent.predict(states[:,:,step-1], verbose=0, batch_size=n_sessions) #FIXME: batch_size?
-		# prob = predict_joblib(states, step, agent, 4) # distributed version
 		pred_time += time.time()-tic
 		tic = time.time()
 		actions, state_next, states, terminal = jitted_play_game(actions,state_next,states,prob, step, total_score)
@@ -311,21 +316,20 @@ for i in range(1000000): #1000000 generations should be plenty
 	print(	"Mean reward: " + str(mean_all_reward) + "\nSessgen: " + str(sessgen_time) + ", other: " + str(randomcomp_time) + ", select1: " + str(select1_time) + ", select2: " + str(select2_time) + ", select3: " + str(select3_time) +  ", fit: " + str(fit_time) + ", score: " + str(score_time)) 
 	
 	
-	if (i%20 == 1): #Write all important info to files every 20 iterations
-		with open('best_species_pickle_'+str(myRand)+'.txt', 'wb') as fp:
-			pickle.dump(super_actions, fp)
-		with open('best_species_txt_'+str(myRand)+'.txt', 'w') as f:
-			for item in super_actions:
-				f.write(str(item))
-				f.write("\n")
-		with open('best_species_rewards_'+str(myRand)+'.txt', 'w') as f:
-			for item in super_rewards:
-				f.write(str(item))
-				f.write("\n")
-		with open('best_100_rewards_'+str(myRand)+'.txt', 'a') as f:
-			f.write(str(mean_all_reward)+"\n")
-		with open('best_elite_rewards_'+str(myRand)+'.txt', 'a') as f:
-			f.write(str(mean_best_reward)+"\n")
+	with open('best_species_pickle_'+str(myRand)+'.txt', 'wb') as fp:
+		pickle.dump(super_actions, fp)
+	with open('best_species_txt_'+str(myRand)+'.txt', 'w') as f:
+		for item in super_actions:
+			f.write(str(item))
+			f.write("\n")
+	with open('best_species_rewards_'+str(myRand)+'.txt', 'w') as f:
+		for item in super_rewards:
+			f.write(str(item))
+			f.write("\n")
+	with open('best_100_rewards_'+str(myRand)+'.txt', 'a') as f:
+		f.write(str(mean_all_reward)+"\n")
+	with open('best_elite_rewards_'+str(myRand)+'.txt', 'a') as f:
+		f.write(str(mean_best_reward)+"\n")
 	if (i%200==2): # To create a timeline, like in Figure 3
 		with open('best_species_timeline_txt_'+str(myRand)+'.txt', 'a') as f:
 			f.write(str(super_actions[0]))

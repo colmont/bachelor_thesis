@@ -14,8 +14,8 @@
 import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import SGD, Adam, Nadam
-from hypergraph_njit import calc_prefix_disc_simple
+from tensorflow.keras.optimizers import Nadam
+from discrepancy import calc_prefix_disc_simple
 from dynamic import calc_prefix_disc_dp_count
 import time
 from numba import njit
@@ -61,8 +61,6 @@ for i in range(100):
 	model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 	model.add(Dense(1, activation="sigmoid"))
 	model.build((None, observation_space))
-	# model.compile(loss="binary_crossentropy", optimizer=SGD(learning_rate = LEARNING_RATE)) #Adam optimizer also works well, with lower learning rate
-	# model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = 0.0003)) #Adam optimizer also works well, with lower learning rate
 	model.compile(loss="binary_crossentropy", optimizer=Nadam()) #Adam optimizer also works well, with lower learning rate
 
 
@@ -117,12 +115,6 @@ for i in range(100):
 		return actions, state_next, states, terminal
 
 	jitted_play_game = njit()(play_game)
-
-	# # Tried to improve speed by distributing prediction. Turned out to decrease speed.
-	# def predict_joblib(states, step, agent, workers):
-	# 	batches = np.array_split(states[:,:,step-1], workers, axis=0)
-	# 	matrix = np.array(Parallel(n_jobs=-1)(delayed(agent.predict)(batch) for batch in batches))
-	# 	return matrix.flatten()
 
 	def generate_session(agent, n_sessions, verbose = 1):
 		"""
@@ -225,9 +217,9 @@ for i in range(100):
 	score_time = 0
 
 
-	####################################################################@#
-	# 								ADDED
-	####################################################################@#
+	######################################################################
+	# 								 ADDED						    	 #
+	######################################################################
 
 	found_first = False
 	found_100 = False
@@ -291,10 +283,10 @@ for i in range(100):
 		#uncomment below line to print out how much time each step in this loop takes. 
 		print(	"Mean reward: " + str(mean_all_reward) + "\nSessgen: " + str(sessgen_time) + ", other: " + str(randomcomp_time) + ", select1: " + str(select1_time) + ", select2: " + str(select2_time) + ", select3: " + str(select3_time) +  ", fit: " + str(fit_time) + ", score: " + str(score_time)) 
 		
-		
-		####################################################################@#
-		# 								ADDED
-		####################################################################@#
+
+		######################################################################
+		# 								 ADDED						    	 #
+		######################################################################
 		
 		counter += 1
 
@@ -306,7 +298,7 @@ for i in range(100):
 			counter_100 = counter
 			found_100 = True
 		
-	with open('seach_count_first.txt', 'a') as f:
+	with open('search_count_first.txt', 'a') as f:
 		f.write(str(counter_first)+"\n")
-	with open('serarch_count_100.txt', 'a') as f:
+	with open('search_count_100.txt', 'a') as f:
 		f.write(str(counter_100)+"\n")
